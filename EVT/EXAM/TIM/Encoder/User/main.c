@@ -133,37 +133,37 @@ void Before_while()
     //Delay_Ms(1);
     LCD_String(str);
 
-    sprintf(str,RD);
+    sprintf(str,"Encoder");
     LCD_SetPos(0, 2);
     //Delay_Ms(1);
     LCD_String(str);
 
-    sprintf(str,WC);
+    sprintf(str,"Time");
     LCD_SetPos(0, 3);
     //Delay_Ms(1);
     LCD_String(str);   
 
 
-//    Delay_Ms(4444);
-//     sprintf(str,"11345678909753186421");
+//    Delay_Ms(111);
+//     sprintf(str,"12345678901234567890");
 //     LCD_SetPos(0, 0);
-//     //Delay_Ms(1);
-//     LCD_String(str);//// LCD on I2C1  SDA PB7, SCL PB6
+    //Delay_Ms(1);
+ //   LCD_String(str);//// LCD on I2C1  SDA PB7, SCL PB6
 
-//     sprintf(str,"22345678909753186422");
-//     LCD_SetPos(0, 1);
-//     //Delay_Ms(1);
-//     LCD_String(str);
+    // sprintf(str,"12345678901234567890");
+    // LCD_SetPos(0, 1);
+    // //Delay_Ms(1);
+    // LCD_String(str);
 
-//     sprintf(str,"33345678909753186423");
-//     LCD_SetPos(0, 2);
-//     //Delay_Ms(1);
-//     LCD_String(str);
+    // sprintf(str,"12345678901234567890");
+    // LCD_SetPos(0, 2);
+    // //Delay_Ms(1);
+    // LCD_String(str);
 
-//     sprintf(str,"42345678909753186424");
-//     LCD_SetPos(0, 3);
-//     //Delay_Ms(1);
-//     LCD_String(str);
+    // sprintf(str,"12345678901234567890");
+    // LCD_SetPos(0, 3);
+    // //Delay_Ms(1);
+    // LCD_String(str);
 
 
 
@@ -273,7 +273,7 @@ static  int16_t Encoder_Abs_Value=0;
 static uint16_t newCount=0;
 static uint16_t prevCount=0;
 
-newCount = TIM_GetCounter(TIM3)>>1;
+newCount = TIM_GetCounter(TIM3)>>2;
 if (newCount != prevCount)
     {
     if (newCount > prevCount)
@@ -315,18 +315,35 @@ int main(void)
 int16_t prev_Value=0;
     while (1)
     {
-        int16_t curr_Enc;
-        curr_Enc = Encoder_Get_Abs_Value();
-        if (prev_Value!= curr_Enc)
-            {
-                prev_Value = curr_Enc;
-                //printf("prev_Value= 0x%04x \r\n", TIM_GetCounter(TIM3));
-                if(curr_Enc<0)
-                {
-                 printf("Abs_Value=- %d \r\n", -curr_Enc);   
-                }else{printf("Abs_Value= %d \r\n", curr_Enc);}
-                Delay_Ms(100);
-            }
+    int16_t curr_Enc;
+    curr_Enc = Encoder_Get_Abs_Value();
+    if (prev_Value!= curr_Enc)
+        {
+        prev_Value = curr_Enc;
+        if(curr_Enc<0)
+        {
+            printf("Abs_Value=- %03d \r\n", -curr_Enc);
+            LCD_SetPos(8, 2);
+            sprintf(str,"     ");
+            LCD_String(str);
+
+            LCD_SetPos(8, 2);
+            sprintf(str,"-%d",-curr_Enc);  
+            LCD_String(str); 
+        }else{
+               printf("Abs_Value= %03d \r\n", curr_Enc);
+               LCD_SetPos(8, 2);
+               sprintf(str,"     ");
+               LCD_String(str);
+
+               LCD_SetPos(8, 2);
+               sprintf(str,"+%d",curr_Enc);
+               LCD_String(str);  
+             }
+            
         
-    }
-}
+        }
+        
+    }//while (1)
+
+}//main(void)
