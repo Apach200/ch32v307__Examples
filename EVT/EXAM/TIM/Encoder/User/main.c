@@ -4,10 +4,6 @@
 * Version            : V1.0.0
 * Date               : 2024/02/21
 * Description        : Main program body.
-*********************************************************************************
-* Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
-* Attention: This software (modified or not) and binary are used for 
-* microcontroller manufactured by Nanjing Qinheng Microelectronics.
 *******************************************************************************/
 
 /**
@@ -17,18 +13,179 @@
  * speed.
  */
 #include "debug.h"
+#include "lcd.h"
 
 /* Global define */
 
-/* The `#define SpeedSampleTimeMs 20` line is defining a constant macro `SpeedSampleTimeMs` with a
-value of 20. This constant is used in the code to specify the time interval (in milliseconds) at
-which the speed of the encoder is sampled and calculated. */
-#define SpeedSampleTimeMs 20
 /* Global Variable */
+/* I2C Mode Definition */
+#define HOST_MODE     0
+#define SLAVE_MODE    1
 
+#define Size   6
+#define RXAdderss   0x4e
+#define TxAdderss   0x4e
+
+/* Global Variable */
+u8 TxData[Size] = { 0x61, 0x32, 0x43, 0x54, 0x75, 0x86 };
+u8 RxData[5][Size];
+char str[32];
+const   char Sampling_complete_MSG[] = "Sampling_complete" ;
+const   char RD[] = "Reserch&Design" ;
+const   char GM[] = "General Meditech";
+const   char WC[] = "Wireless Charger";
 volatile int circle = 0, precircle = 0;
 volatile uint16_t precnt = 0;
 volatile uint32_t time = 0;
+
+
+
+
+/*********************************************************************
+ * @fn      IIC_Init
+ *
+ * @brief   Initializes the IIC peripheral.
+ *
+ * @return  none
+ */
+void IIC_Init(u32 bound, u16 address)
+{
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    I2C_InitTypeDef  I2C_InitTSturcture = {0};
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
+    //GPIO_PinRemapConfig(GPIO_Remap_I2C1, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+    I2C_InitTSturcture.I2C_ClockSpeed = bound;
+    I2C_InitTSturcture.I2C_Mode = I2C_Mode_I2C;
+    I2C_InitTSturcture.I2C_DutyCycle = I2C_DutyCycle_16_9;
+    I2C_InitTSturcture.I2C_OwnAddress1 = address;
+    I2C_InitTSturcture.I2C_Ack = I2C_Ack_Enable;
+    I2C_InitTSturcture.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
+    I2C_Init(I2C1, &I2C_InitTSturcture);
+
+    I2C_Cmd(I2C1, ENABLE);
+
+#if(I2C_MODE == HOST_MODE)
+    I2C_AcknowledgeConfig(I2C1, ENABLE);
+
+#endif
+}
+
+
+
+void Before_while()
+{
+
+#if(I2C_MODE == HOST_MODE)
+    printf("IIC Host mode\r\n");
+    IIC_Init(100000, TxAdderss);Delay_Ms(100);
+
+
+    for(uint16_t j =0; j < 5; j++)
+     {
+    while( I2C_GetFlagStatus( I2C1, I2C_FLAG_BUSY ) != RESET );
+
+    I2C_GenerateSTART(I2C1, ENABLE);
+
+    while( !I2C_CheckEvent( I2C1, I2C_EVENT_MASTER_MODE_SELECT ) );
+    I2C_Send7bitAddress( I2C1, 0x4E, I2C_Direction_Transmitter );
+
+    while( !I2C_CheckEvent( I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED ) );
+
+   for(uint16_t i=0; i< 6;i++ )
+    {
+        if(I2C_GetFlagStatus(I2C1, I2C_FLAG_TXE) != RESET)
+        {
+           // Delay_Ms(2);
+            I2C_SendData( I2C1, TxData[i] );
+        }
+    }
+
+    while( !I2C_CheckEvent( I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED ) );
+    I2C_GenerateSTOP( I2C1, ENABLE );
+    //Delay_Ms(50);
+     }
+
+
+
+    LCD_ini();
+    Delay_Ms(1);
+
+    sprintf(str,"LCD2004_I2C1_Test");
+    LCD_SetPos(0, 0);
+    //Delay_Ms(1);
+    LCD_String(str);//// LCD on I2C1  SDA PB7, SCL PB6
+
+    sprintf(str,"SDA_PB7___SCL__PB6");
+    LCD_SetPos(0, 1);
+    //Delay_Ms(1);
+    LCD_String(str);
+
+    sprintf(str,RD);
+    LCD_SetPos(0, 2);
+    //Delay_Ms(1);
+    LCD_String(str);
+
+    sprintf(str,WC);
+    LCD_SetPos(0, 3);
+    //Delay_Ms(1);
+    LCD_String(str);   
+
+
+//    Delay_Ms(4444);
+//     sprintf(str,"11345678909753186421");
+//     LCD_SetPos(0, 0);
+//     //Delay_Ms(1);
+//     LCD_String(str);//// LCD on I2C1  SDA PB7, SCL PB6
+
+//     sprintf(str,"22345678909753186422");
+//     LCD_SetPos(0, 1);
+//     //Delay_Ms(1);
+//     LCD_String(str);
+
+//     sprintf(str,"33345678909753186423");
+//     LCD_SetPos(0, 2);
+//     //Delay_Ms(1);
+//     LCD_String(str);
+
+//     sprintf(str,"42345678909753186424");
+//     LCD_SetPos(0, 3);
+//     //Delay_Ms(1);
+//     LCD_String(str);
+
+
+
+#endif
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void TIM3_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 /*********************************************************************
@@ -63,7 +220,7 @@ void TIM3_IRQHandler()
  * 
  * @return none
  */
-void TIM3_Encoder_Init()
+void TIM3_Init()
 {
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
     TIM_ICInitTypeDef TIM_ICInitStructure;
@@ -79,7 +236,7 @@ void TIM3_Encoder_Init()
 
     TIM_TimeBaseStructInit(&TIM_TimeBaseStructure);
     TIM_TimeBaseStructure.TIM_Prescaler = 0x0;
-    TIM_TimeBaseStructure.TIM_Period = 80;
+    TIM_TimeBaseStructure.TIM_Period = 0xFFFF;
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
@@ -87,77 +244,53 @@ void TIM3_Encoder_Init()
     TIM_EncoderInterfaceConfig(TIM3, TIM_EncoderMode_TI12, TIM_ICPolarity_Rising, TIM_ICPolarity_Rising);
 
     TIM_ICStructInit(&TIM_ICInitStructure);
-    TIM_ICInitStructure.TIM_ICFilter = 10;
+    TIM_ICInitStructure.TIM_ICFilter = 0;
     TIM_ICInit(TIM3, &TIM_ICInitStructure);
 
     NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-
     NVIC_Init(&NVIC_InitStructure);
-
-    TIM_ClearFlag(TIM3, TIM_FLAG_Update);
-    TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
-    TIM_SetCounter(TIM3, 0);
-    TIM_Cmd(TIM3, ENABLE);
 }
 
-/*********************************************************************
- * @fn TIM2_EncoderSignalGenerator_Init
- * 
- * @brief The function initializes the TIM2 timer as an encoder signal generator with the specified prescaler,
- *      auto-reload value, and capture/compare value.
- * 
- * @param psc The "psc" parameter stands for Prescaler value. It is used to divide the timer clock
- *          frequency before it is fed into the counter. This helps in adjusting the timer resolution and the
- *          frequency at which the counter increments.
- *        arr The "arr" parameter in the function TIM2_EncoderSignalGenerator_Init is used to set the
- *          auto-reload value of the timer. It determines the period of the timer, i.e., the number of timer
- *          counts before the timer resets and starts counting again.
- *        ccr The "ccr" parameter in the function TIM2_EncoderSignalGenerator_Init is used to set the
- *          initial value of the Capture/Compare register (CCR) for the Timer 2 output channels. The CCR
- *          determines the duty cycle or pulse width of the generated signal.
- * 
- * @return none
- */
-void TIM2_EncoderSignalGenerator_Init(uint16_t psc, uint16_t arr, uint16_t ccr)
+
+
+void Encoder_Init(void) 
 {
-    GPIO_InitTypeDef GPIO_InitStructure = {0};
-    TIM_OCInitTypeDef TIM_OCInitStructure = {0};
-    TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure = {0};
-
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
-
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-    TIM_TimeBaseInitStructure.TIM_Period = arr;
-    TIM_TimeBaseInitStructure.TIM_Prescaler = psc;
-    TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-    TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimeBaseInit(TIM2, &TIM_TimeBaseInitStructure);
-
-    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Toggle;
-
-    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-    TIM_OCInitStructure.TIM_Pulse = ccr;
-    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-    TIM_OC1Init(TIM2, &TIM_OCInitStructure);
-    TIM_OCInitStructure.TIM_Pulse = ccr - 200;
-    TIM_OC2Init(TIM2, &TIM_OCInitStructure);
-
-    TIM_CtrlPWMOutputs(TIM2, ENABLE);
-    TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Disable);
-    TIM_OC2PreloadConfig(TIM2, TIM_OCPreload_Disable);
-    TIM_ARRPreloadConfig(TIM2, ENABLE);
-    TIM_Cmd(TIM2, ENABLE);
+  //TIM3_Init(); 
+ TIM_ClearFlag(TIM3, TIM_FLAG_Update);
+ TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+ TIM_SetCounter(TIM3, 0x8000);
+ TIM_Cmd(TIM3, ENABLE);
 }
+
+
+
+int16_t Encoder_Get_Abs_Value() 
+{
+static  int16_t Encoder_Abs_Value=0;
+static uint16_t newCount=0;
+static uint16_t prevCount=0;
+
+newCount = TIM_GetCounter(TIM3)>>1;
+if (newCount != prevCount)
+    {
+    if (newCount > prevCount)
+        {
+        prevCount = newCount;
+        return (Encoder_Abs_Value++);
+        } else {
+                prevCount = newCount;
+                return (Encoder_Abs_Value--);
+                }
+    }
+return (Encoder_Abs_Value);
+}
+
+
+
+
 
 /*********************************************************************
  * @fn      main
@@ -171,30 +304,29 @@ int main(void)
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
     SystemCoreClockUpdate();
     Delay_Init();
-    USART_Printf_Init(115200);
+    USART_Printf_Init(115200*8);
     printf("SystemClk:%d\r\n", SystemCoreClock);
     printf("ChipID:%08x\r\n", DBGMCU_GetCHIPID());
 
-    printf("Encoder TEST\r\n");
-    TIM2_EncoderSignalGenerator_Init(SystemCoreClock / 1000000 - 1, 1000 - 1, 500);
-    TIM3_Encoder_Init();
-
+    printf("Encoder_PA7_PA6__Timer3\r\n");
+    TIM3_Init();
+    Encoder_Init() ;
+    Before_while();
+int16_t prev_Value=0;
     while (1)
     {
-        /* The code block you provided is checking if the encoder position or count has changed. If
-        there is a change, it prints the new encoder position and calculates the encoder speed. */
-        if (precircle != circle || (precnt != TIM3->CNT && TIM3->CNT % 4 == 0))
-        {
-            printf("Encoder position= %d circle %d step\r\n", circle, TIM3->CNT);
-            if (time != 0)
-                printf("Encoder speed= %f\r\n", -(float)(precircle * 80 + precnt - (circle * 80 + TIM3->CNT)) / (float)time * 1000.0/(float)SpeedSampleTimeMs / 80.0);
-            else
-                printf("Encoder speed null!!\r\n");
-            time = 0;
-            precircle = circle;
-            precnt = TIM3->CNT;
-        }
-        time++;
-        Delay_Ms(SpeedSampleTimeMs);
+        int16_t curr_Enc;
+        curr_Enc = Encoder_Get_Abs_Value();
+        if (prev_Value!= curr_Enc)
+            {
+                prev_Value = curr_Enc;
+                //printf("prev_Value= 0x%04x \r\n", TIM_GetCounter(TIM3));
+                if(curr_Enc<0)
+                {
+                 printf("Abs_Value=- %d \r\n", -curr_Enc);   
+                }else{printf("Abs_Value= %d \r\n", curr_Enc);}
+                Delay_Ms(100);
+            }
+        
     }
 }
