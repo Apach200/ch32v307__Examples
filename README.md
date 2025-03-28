@@ -14,9 +14,9 @@ Ethernet MAC is upgraded to GbE and integrates 10M PHY module.
 
 ### System Block Diagram
 <img src="image/frame.jpg" alt="frame" style="zoom:50%;" />
-<img src="image/IMG_20250328_203947.jpg" alt="frame" style="zoom:25%;" />
-<img src="image/IMG_20250328_203957.jpg" alt="frame" style="zoom:25%;" />
-<img src="image/IMG_20250328_204017.jpg" alt="frame" style="zoom:25%;" />
+<img src="image/IMG_20250328_203947.jpg" alt="IMG_20250328_203947" style="zoom:25%;" />
+<img src="image/IMG_20250328_203957.jpg" alt="IMG_20250328_203957" style="zoom:25%;" />
+<img src="image/IMG_20250328_204017.jpg" alt="IMG_20250328_204017" style="zoom:25%;" />
 
  
 ### Features
