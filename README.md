@@ -12,8 +12,10 @@ The CH32V305/7 provides USB2.0 high-speed interface (480Mbps) and has built-in P
 
 Ethernet MAC is upgraded to GbE and integrates 10M PHY module.
 
-### System Block Diagram
+### WCH Evolution board with LCD and encoder
 <img src="image/top_view.jpg" alt="frame" style="zoom:50%;" />
+<img src="image/right_view.jpg" alt="frame" style="zoom:50%;" />
+<img src="image/left_view.jpg" alt="frame" style="zoom:50%;" />
 
 
  
