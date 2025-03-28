@@ -84,7 +84,7 @@ u8 RTC_Init(void)
 
     /* Is it the first configuration */
 
-    BKP_DeInit();
+    ///BKP_DeInit(); /* Uncomment for  time setting. */
     RCC_LSEConfig(RCC_LSE_ON);
     while(RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET && temp < 250)
     {
@@ -103,7 +103,7 @@ u8 RTC_Init(void)
     RTC_EnterConfigMode();
     RTC_SetPrescaler(32767);
     RTC_WaitForLastTask();
-    RTC_Set(2019, 10, 8, 13, 58, 55); /* Setup Time */
+    RTC_Set(2025, 03, 28, 18, 59, 55); /* Setup Time */
     RTC_ExitConfigMode();
     BKP_WriteBackupRegister(BKP_DR1, 0XA1A1);
 
@@ -330,7 +330,7 @@ int main(void)
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
     SystemCoreClockUpdate();
     Delay_Init();
-    USART_Printf_Init(115200);	
+    USART_Printf_Init(115200*8);	
     printf("SystemClk:%d\r\n", SystemCoreClock);
     printf( "ChipID:%08x\r\n", DBGMCU_GetCHIPID() );
     printf("RTC Test\r\n");
