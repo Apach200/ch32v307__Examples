@@ -92,8 +92,7 @@ void Before_while()
 
 #if(I2C_MODE == HOST_MODE)
     printf("IIC Host mode\r\n");
-    IIC_Init(100000, TxAdderss);Delay_Ms(100);
-
+    IIC_Init(100000, TxAdderss);//Delay_Ms(100);
 
     for(uint16_t j =0; j < 5; j++)
      {
@@ -110,64 +109,28 @@ void Before_while()
     {
         if(I2C_GetFlagStatus(I2C1, I2C_FLAG_TXE) != RESET)
         {
-           // Delay_Ms(2);
             I2C_SendData( I2C1, TxData[i] );
         }
     }
 
     while( !I2C_CheckEvent( I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED ) );
     I2C_GenerateSTOP( I2C1, ENABLE );
-    //Delay_Ms(50);
      }
-
-
 
     LCD_ini();
     Delay_Ms(1);
 
-    sprintf(str,"LCD2004_I2C1_Test");
+    sprintf(str,"LCD2004_I2C1");
     LCD_SetPos(0, 0);
-    //Delay_Ms(1);
     LCD_String(str);//// LCD on I2C1  SDA PB7, SCL PB6
 
     sprintf(str,"SDA_PB7___SCL__PB6");
     LCD_SetPos(0, 1);
-    //Delay_Ms(1);
     LCD_String(str);
 
     sprintf(str,"Encoder");
     LCD_SetPos(0, 2);
-    //Delay_Ms(1);
     LCD_String(str);
-
-    // sprintf(str,"Time");
-    // LCD_SetPos(0, 3);
-    // //Delay_Ms(1);
-    // LCD_String(str);   
-
-
-//    Delay_Ms(111);
-//     sprintf(str,"12345678901234567890");
-//     LCD_SetPos(0, 0);
-    //Delay_Ms(1);
- //   LCD_String(str);//// LCD on I2C1  SDA PB7, SCL PB6
-
-    // sprintf(str,"12345678901234567890");
-    // LCD_SetPos(0, 1);
-    // //Delay_Ms(1);
-    // LCD_String(str);
-
-    // sprintf(str,"12345678901234567890");
-    // LCD_SetPos(0, 2);
-    // //Delay_Ms(1);
-    // LCD_String(str);
-
-    // sprintf(str,"12345678901234567890");
-    // LCD_SetPos(0, 3);
-    // //Delay_Ms(1);
-    // LCD_String(str);
-
-
 
 #endif
 }
