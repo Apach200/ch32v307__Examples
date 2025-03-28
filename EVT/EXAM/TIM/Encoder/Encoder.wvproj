@@ -166,7 +166,8 @@
 							"${project}/User",
 							"${project}/Peripheral/inc",
 							"${project}/User/LCD_I2C",
-							"${project}/User/RTC_utils"
+							"${project}/User/RTC_utils",
+							"${project}/User/ADC_utils"
 						],
 						"include_system_paths": [],
 						"include_files": []

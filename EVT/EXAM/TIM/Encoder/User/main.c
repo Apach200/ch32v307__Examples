@@ -15,6 +15,7 @@
 #include "debug.h"
 #include "lcd.h"
 #include "RTC_utils.h"
+#include "ADC_utils.h"
 
 /* Global define */
 
@@ -31,16 +32,15 @@
 u8 TxData[Size] = { 0x61, 0x32, 0x43, 0x54, 0x75, 0x86 };
 u8 RxData[5][Size];
 char str[32];
-const   char Sampling_complete_MSG[] = "Sampling_complete" ;
-const   char RD[] = "Reserch&Design" ;
-const   char GM[] = "General Meditech";
-const   char WC[] = "Wireless Charger";
+
 volatile int circle = 0, precircle = 0;
 volatile uint16_t precnt = 0;
 volatile uint32_t time = 0;
 
 extern _calendar_obj calendar;
-
+extern s16 Calibrattion_Val;
+	u16 ADC_val;
+	s32 val_mv;
 
 
 /*********************************************************************
@@ -91,7 +91,7 @@ void Before_while()
 {
 
 #if(I2C_MODE == HOST_MODE)
-    printf("IIC Host mode\r\n");
+    printf("\r\n I2C Host mode\r\n\n");
     IIC_Init(100000, TxAdderss);//Delay_Ms(100);
 
     for(uint16_t j =0; j < 5; j++)
@@ -270,17 +270,20 @@ int main(void)
     SystemCoreClockUpdate();
     Delay_Init();
     USART_Printf_Init(115200*8);
-    printf("SystemClk:%d\r\n", SystemCoreClock);
+    printf("\r\nSystemClk:%d\r\n", SystemCoreClock);
     printf("ChipID:%08x\r\n", DBGMCU_GetCHIPID());
+    printf("Encoder_PA7_PA6__Timer3___with_I2C_LCD2004\r\n");
 
-    printf("Encoder_PA7_PA6__Timer3\r\n");
     TIM3_Init();
     Encoder_Init() ;
     Before_while();
     RTC_Init();
+    
+	ADC_Function_Init();
+    printf("CalibrattionValue:%d\n\n", Calibrattion_Val);
 
-    Delay_Ms(1000);
-    printf("year/month/day/week/hour/min/sec:\r\n");
+ 
+    printf("year/month/day/week/hour/min/sec:\r\n\n");
     printf("%d-%d-%d  %d  %d:%d:%d\r\n", calendar.w_year, calendar.w_month, calendar.w_date,
             calendar.week, calendar.hour, calendar.min, calendar.sec);
 
