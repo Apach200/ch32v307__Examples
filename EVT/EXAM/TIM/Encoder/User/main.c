@@ -14,6 +14,7 @@
  */
 #include "debug.h"
 #include "lcd.h"
+#include "RTC_utils.h"
 
 /* Global define */
 
@@ -38,6 +39,7 @@ volatile int circle = 0, precircle = 0;
 volatile uint16_t precnt = 0;
 volatile uint32_t time = 0;
 
+extern _calendar_obj calendar;
 
 
 
@@ -138,10 +140,10 @@ void Before_while()
     //Delay_Ms(1);
     LCD_String(str);
 
-    sprintf(str,"Time");
-    LCD_SetPos(0, 3);
-    //Delay_Ms(1);
-    LCD_String(str);   
+    // sprintf(str,"Time");
+    // LCD_SetPos(0, 3);
+    // //Delay_Ms(1);
+    // LCD_String(str);   
 
 
 //    Delay_Ms(111);
@@ -312,7 +314,20 @@ int main(void)
     TIM3_Init();
     Encoder_Init() ;
     Before_while();
-int16_t prev_Value=0;
+    RTC_Init();
+
+    Delay_Ms(1000);
+    printf("year/month/day/week/hour/min/sec:\r\n");
+    printf("%d-%d-%d  %d  %d:%d:%d\r\n", calendar.w_year, calendar.w_month, calendar.w_date,
+            calendar.week, calendar.hour, calendar.min, calendar.sec);
+
+    LCD_SetPos(0, 3);
+    sprintf(str,"%d.%d.%d",calendar.w_date, calendar.w_month, calendar.w_year);
+    LCD_String(str);
+
+    RTC_Get();   
+    uint8_t Curr_Sec =calendar.sec;
+    int16_t prev_Value=0;
     while (1)
     {
     int16_t curr_Enc;
@@ -322,7 +337,7 @@ int16_t prev_Value=0;
         prev_Value = curr_Enc;
         if(curr_Enc<0)
         {
-            printf("Abs_Value=- %03d \r\n", -curr_Enc);
+            printf("Abs_Value=-%03d \r\n", -curr_Enc);
             LCD_SetPos(8, 2);
             sprintf(str,"     ");
             LCD_String(str);
@@ -331,7 +346,7 @@ int16_t prev_Value=0;
             sprintf(str,"-%d",-curr_Enc);  
             LCD_String(str); 
         }else{
-               printf("Abs_Value= %03d \r\n", curr_Enc);
+               printf("Abs_Value=+%03d \r\n", curr_Enc);
                LCD_SetPos(8, 2);
                sprintf(str,"     ");
                LCD_String(str);
@@ -340,10 +355,19 @@ int16_t prev_Value=0;
                sprintf(str,"+%d",curr_Enc);
                LCD_String(str);  
              }
-            
-        
+
         }
-        
+
+    RTC_Get();  
+    if(calendar.sec == (Curr_Sec+2)%60)
+    {
+    Curr_Sec =calendar.sec;
+    LCD_SetPos(12, 3);
+    sprintf(str,"%02d.%02d.%02d",calendar.hour, calendar.min, calendar.sec);
+    LCD_String(str);
+    }
+         
+    
     }//while (1)
 
 }//main(void)
