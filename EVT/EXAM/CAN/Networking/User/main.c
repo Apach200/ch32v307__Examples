@@ -1,13 +1,8 @@
 /********************************** (C) COPYRIGHT *******************************
 * File Name          : main.c
 * Author             : WCH
-* Version            : V1.0.0
 * Date               : 2021/06/06
-* Description        : Main program body.
-*********************************************************************************
-* Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
-* Attention: This software (modified or not) and binary are used for 
-* microcontroller manufactured by Nanjing Qinheng Microelectronics.
+* Description        : Main program body
 *******************************************************************************/
 
 /*
@@ -26,6 +21,9 @@
 /* CAN Mode Definition */
 #define TX_MODE   0
 #define RX_MODE   1
+#define CAN_std_ID_TOP_board 0x333
+#define CAN_std_ID_Middle_board 0x222
+#define CAN_std_ID_Bottom_board 0x111
 
 /* Frame Format Definition */
 #define Standard_Frame   0
@@ -38,7 +36,9 @@
 /* Frame Formate Selection */
 #define Frame_Format   Standard_Frame
 //#define Frame_Format   Extended_Frame
-
+//uint16_t CAN_ID = CAN_std_ID_TOP_board;
+//uint16_t CAN_ID = CAN_std_ID_Middle_board;
+uint16_t CAN_ID = CAN_std_ID_Bottom_board;
 /*********************************************************************
  * @fn      CAN_Mode_Init
  *
@@ -90,17 +90,22 @@ void CAN_Mode_Init( u8 tsjw, u8 tbs2, u8 tbs1, u16 brp, u8 mode )
 	CAN_InitSturcture.CAN_Prescaler = brp;		
 	CAN_Init( CAN1, &CAN_InitSturcture );
 	
-	CAN_FilterInitSturcture.CAN_FilterNumber = 0;		
+		
 
 #if (Frame_Format == Standard_Frame)
-/* identifier/mask mode, One 32-bit filter, StdId: 0x317 */
+/* identifier/mask mode, One 32-bit filter, StdId: CAN_ID */
+	CAN_FilterInitSturcture.CAN_FilterNumber = 0;
 	CAN_FilterInitSturcture.CAN_FilterMode = CAN_FilterMode_IdMask;	 
 	CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_32bit; 
-	CAN_FilterInitSturcture.CAN_FilterIdHigh = 0x62E0;	 
+	CAN_FilterInitSturcture.CAN_FilterIdHigh = 0;	 
 	CAN_FilterInitSturcture.CAN_FilterIdLow = 0; 
-	CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = 0xFFE0;  	
-	CAN_FilterInitSturcture.CAN_FilterMaskIdLow = 0x0006;	 
+	CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = 0;  	
+	CAN_FilterInitSturcture.CAN_FilterMaskIdLow = 0;	 
 	
+	CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
+	CAN_FilterInitSturcture.CAN_FilterActivation = ENABLE;
+	CAN_FilterInit( &CAN_FilterInitSturcture );
+
 /* identifier/mask mode, Two 16-bit filters, StdId: 0x317,0x316 */
 //	CAN_FilterInitSturcture.CAN_FilterMode = CAN_FilterMode_IdMask;	
 //	CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;	
@@ -127,18 +132,22 @@ void CAN_Mode_Init( u8 tsjw, u8 tbs2, u8 tbs1, u16 brp, u8 mode )
 
 #elif (Frame_Format == Extended_Frame)
 /* identifier/mask mode, One 32-bit filter, ExtId: 0x12124567 */
+	CAN_FilterInitSturcture.CAN_FilterNumber = 9;
 	CAN_FilterInitSturcture.CAN_FilterMode = CAN_FilterMode_IdMask;		
 	CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_32bit;	
 	CAN_FilterInitSturcture.CAN_FilterIdHigh = 0x9092;	
 	CAN_FilterInitSturcture.CAN_FilterIdLow = 0x2B3C;	
 	CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = 0xFFFF; 	
 	CAN_FilterInitSturcture.CAN_FilterMaskIdLow = 0xFFFE;	
-	
-#endif
 
 	CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
 	CAN_FilterInitSturcture.CAN_FilterActivation = ENABLE;
 	CAN_FilterInit( &CAN_FilterInitSturcture );
+
+	
+#endif
+
+
 }
 
 /*********************************************************************
@@ -160,12 +169,12 @@ u8 CAN_Send_Msg( u8 *msg, u8 len )
 	CanTxMsg CanTxStructure;
 
 #if (Frame_Format == Standard_Frame)
-	CanTxStructure.StdId = 0x317;		
-	CanTxStructure.IDE = CAN_Id_Standard;	
+	CanTxStructure.StdId = CAN_ID;		
+	CanTxStructure.IDE   = CAN_Id_Standard;	
   
 #elif (Frame_Format == Extended_Frame)
 	CanTxStructure.ExtId = 0x12124567;		
-	CanTxStructure.IDE = CAN_Id_Extended;	
+	CanTxStructure.IDE   = CAN_Id_Extended;	
 	
 #endif	
 	
@@ -247,7 +256,7 @@ int main(void)
 	printf( "ChipID:%08x\r\n", DBGMCU_GetCHIPID() );
 	
 #if (CAN_MODE == TX_MODE)	
-	printf( "Tx Mode\r\n" );
+	printf( "Tx Mode \r\n");
 	
 #elif (CAN_MODE == RX_MODE)	
 	printf( "Rx Mode\r\n" );
@@ -273,12 +282,14 @@ int main(void)
 		}
 		else	
 		{
-			printf( "Send Success\r\n" );
-			printf( "Send Data:\r\n" );
+			printf( "Send Success CAN_ID = 0x%04X \r\n",(uint16_t)(CAN_ID) );
+			printf( "bottom board Send Data:\r\n" );
+			// printf( "middle board Send Data:\r\n" );
+			// printf( "top boardSend Data:\r\n" );
 			
 			for(i=0; i<8; i++)
 			{
-				printf( "%02x\r\n", pxbuf[i] );
+				printf( "0x%02x\r\n", pxbuf[i] );
 			}
 		}
 		
@@ -297,7 +308,7 @@ int main(void)
 		
 #endif		
 		
-		Delay_Ms(1000);
+		Delay_Ms(250);
 		cnt++;
 		
 		if(cnt == 0xFF)

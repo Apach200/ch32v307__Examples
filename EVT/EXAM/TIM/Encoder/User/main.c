@@ -14,8 +14,8 @@
  */
 #include "debug.h"
 #include "lcd.h"
-#include "RTC_utils.h"
-#include "ADC_utils.h"
+//#include "RTC_utils.h"
+//#include "ADC_utils.h"
 
 /* Global define */
 
@@ -37,7 +37,20 @@ volatile int circle = 0, precircle = 0;
 volatile uint16_t precnt = 0;
 volatile uint32_t time = 0;
 
-extern _calendar_obj calendar;
+typedef struct
+{
+    vu8 hour;
+    vu8 min;
+    vu8 sec;
+
+    vu16 w_year;
+    vu8  w_month;
+    vu8  w_date;
+    vu8  week;
+} _calendar_obj;
+
+
+_calendar_obj   calendar;
 extern s16 Calibrattion_Val;
 	u16 ADC_val;
 	s32 val_mv;
